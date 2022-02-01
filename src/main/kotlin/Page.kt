@@ -1,25 +1,31 @@
 import me.thorny.twoColoredRange.RedGreenIntArrayRange
 import react.*
 import kotlinx.browser.window
-import kotlinx.css.h3
 import kotlinx.html.InputType
-import kotlinx.html.for_
 import kotlinx.html.id
+import org.w3c.dom.HTMLInputElement
 import react.dom.*
 import styled.css
 import styled.styledButton
 import styled.styledDiv
 import styled.styledInput
 
+val validRangeLength = 1..10000
+val validBlockLength = 5..20
+
 data class PageState(
+  var blockLength: Int?,
   val range: RedGreenIntArrayRange,
+  var didStart: Boolean,
 ): State
 
 @JsExport
 class Page: RComponent<Props, PageState>() {
   init {
     state = PageState(
-      RedGreenIntArrayRange(1..2795)
+      10,
+      RedGreenIntArrayRange(1..2795),
+      false,
     )
   }
 
@@ -40,39 +46,65 @@ class Page: RComponent<Props, PageState>() {
     h1 {
       +"Two colored range visualizer"
     }
-    label {
-      attrs {
-        htmlFor = "length"
-      }
-      +"Range length: "
-    }
-    styledInput {
-      attrs {
-        id = "length"
-        type = InputType.text
-      }
-    }
-    styledDiv {
-      css { +Styles.clear }
-    }
+//    label {
+//      attrs {
+//        htmlFor = "range-length"
+//      }
+//      +"Range length (1..10000): "
+//    }
+//    styledInput {
+//      attrs {
+//        id = "range-length"
+//        type = InputType.text
+//        value = state.range.range.endInclusive.toString()
+//        disabled = state.didStart
+//      }
+//    }
+//    styledDiv {
+//      css { +Styles.clear }
+//    }
+//    label {
+//      attrs {
+//        htmlFor = "block-length"
+//      }
+//      +"Block length (5..20): "
+//    }
+//    styledInput {
+//      attrs {
+//        id = "length"
+//        type = InputType.text
+//        value = state.blockLength.toString()
+//        disabled = state.didStart
+//        onChange = {
+//          console.log((it.target as HTMLInputElement).value)
+//        }
+//      }
+//    }
+//    styledDiv {
+//      css { +Styles.clear }
+//    }
     styledButton {
       css { +Styles.button }
       attrs {
         onClick = {
+          setState {
+            didStart = true
+          }
           startFillingRandomSubrange()
         }
+        disabled = state.didStart
       }
       +"Start filling"
     }
-    styledButton {
-      css { +Styles.button }
-      attrs {
-        onClick = {
-          startFillingRandomSubrange()
-        }
-      }
-      +"Reset"
-    }
+//    styledButton {
+//      css { +Styles.button }
+//      attrs {
+//        onClick = {
+//          startFillingRandomSubrange()
+//        }
+//      }
+//      +"Reset"
+//    }
     child(Grid::class) {
       attrs {
         range = state.range
