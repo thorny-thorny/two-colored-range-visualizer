@@ -1,6 +1,6 @@
 import kotlinx.css.flex
 import kotlinx.css.px
-import me.thorny.twoColoredRange.RedBlackIntRange
+import me.thorny.twoColoredRange.RedGreenIntArrayRange
 import react.*
 import react.dom.div
 import styled.css
@@ -8,7 +8,7 @@ import styled.styledDiv
 import kotlin.math.ceil
 
 external interface GridProps: Props {
-  var range: RedBlackIntRange
+  var range: RedGreenIntArrayRange
 }
 
 const val segmentLength = 10

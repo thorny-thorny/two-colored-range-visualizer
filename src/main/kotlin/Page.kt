@@ -1,4 +1,4 @@
-import me.thorny.twoColoredRange.RedBlackIntRange
+import me.thorny.twoColoredRange.RedGreenIntArrayRange
 import react.*
 import kotlinx.browser.window
 import kotlinx.css.h3
@@ -12,14 +12,14 @@ import styled.styledDiv
 import styled.styledInput
 
 data class PageState(
-  val range: RedBlackIntRange,
+  val range: RedGreenIntArrayRange,
 ): State
 
 @JsExport
 class Page: RComponent<Props, PageState>() {
   init {
     state = PageState(
-      RedBlackIntRange(1..2795)
+      RedGreenIntArrayRange(1..2795)
     )
   }
 

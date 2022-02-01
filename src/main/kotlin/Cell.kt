@@ -1,11 +1,11 @@
 import kotlinx.css.flex
-import me.thorny.twoColoredRange.RedBlackIntRange
+import me.thorny.twoColoredRange.RedGreenIntArrayRange
 import react.*
 import styled.css
 import styled.styledDiv
 
 external interface CellProps: Props {
-  var range: RedBlackIntRange
+  var range: RedGreenIntArrayRange
   var segmentRange: ClosedRange<Int>?
   var endPadLength: Int?
 }
