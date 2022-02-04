@@ -1,37 +1,36 @@
-import me.thorny.twoColoredRange.RedGreenIntArrayRange
 import react.*
 import styled.css
 import styled.styledDiv
 import kotlin.math.ceil
 
-external interface GridProps: Props {
-  var range: RedGreenIntArrayRange
-}
-
-const val segmentLength = 10
 const val cellsPerRow = 50
+
+external interface GridProps: Props {
+  var downloadAtlas: DownloadAtlas
+  var cellLength: Int
+}
 
 @JsExport
 class Grid(props: GridProps): RComponent<GridProps, State>(props) {
   override fun RBuilder.render() {
     styledDiv {
       css { +Styles.grid }
-      repeat(ceil(props.range.length.toFloat() / (cellsPerRow * segmentLength)).toInt()) { row ->
+      repeat(ceil(props.downloadAtlas.length.toFloat() / (cellsPerRow * props.cellLength)).toInt()) { row ->
         styledDiv {
           css { +Styles.row }
           repeat(cellsPerRow) { cell ->
             child(Cell::class) {
               attrs {
-                range = props.range
+                downloadAtlas = props.downloadAtlas
 
-                val start = 1 + segmentLength * cell + cellsPerRow * segmentLength * row
-                if (start > props.range.range.endInclusive) {
-                  segmentRange = null
+                val start = 1 + props.cellLength * cell + cellsPerRow * props.cellLength * row
+                if (start > props.downloadAtlas.range.endInclusive) {
+                  subrange = null
                 } else {
-                  val endInclusive = start + segmentLength - 1
-                  segmentRange = start..minOf(endInclusive, props.range.range.endInclusive)
-                  if (endInclusive > props.range.range.endInclusive) {
-                    endPadLength = endInclusive - props.range.range.endInclusive
+                  val endInclusive = start + props.cellLength - 1
+                  subrange = start..minOf(endInclusive, props.downloadAtlas.range.endInclusive)
+                  if (endInclusive > props.downloadAtlas.range.endInclusive) {
+                    endPadLength = endInclusive - props.downloadAtlas.range.endInclusive
                   }
                 }
               }

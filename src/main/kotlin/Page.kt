@@ -1,113 +1,196 @@
-import me.thorny.twoColoredRange.RedGreenIntArrayRange
 import react.*
 import kotlinx.browser.window
+import kotlinx.html.ButtonType
 import kotlinx.html.InputType
+import kotlinx.html.classes
 import kotlinx.html.id
 import org.w3c.dom.HTMLInputElement
 import react.dom.*
-import styled.css
-import styled.styledButton
-import styled.styledDiv
-import styled.styledInput
 
-val validRangeLength = 1..10000
-val validBlockLength = 5..20
+val validFileLength = 1..10000
+val validCellLength = 5..20
 
 data class PageState(
-  var blockLength: Int?,
-  val range: RedGreenIntArrayRange,
-  var didStart: Boolean,
+  var downloadAtlas: DownloadAtlas,
+  var cellLength: Int,
+  var downloadTimeoutId: Int?,
 ): State
 
 @JsExport
 class Page: RComponent<Props, PageState>() {
   init {
     state = PageState(
-      10,
-      RedGreenIntArrayRange(1..2795),
-      false,
+      DownloadAtlas(validFileLength.last),
+      validCellLength.last,
+      null,
     )
   }
 
-  private fun startFillingRandomSubrange() {
-    val otherColorSubranges = state.range.getSubrangesOfDefaultColor()
-    val randomSubrange = otherColorSubranges.randomOrNull()
-    if (randomSubrange != null) {
-      val start = (randomSubrange.start..randomSubrange.endInclusive).random()
-      val length = minOf((1..10).random() - 1, randomSubrange.endInclusive - start)
-      state.range.setSubrangeOtherColor(start..(start + length))
-      setState { }
+  private fun setFileSize(size: Int) {
+    setState {
+      downloadAtlas = DownloadAtlas(size)
+    }
+  }
 
-      window.setTimeout({ startFillingRandomSubrange() }, 50)
+  private fun setCellLength(length: Int) {
+    setState {
+      cellLength = length
+    }
+  }
+
+  private fun startDownloading() {
+    doDownloadStep()
+  }
+
+  private fun doDownloadStep() {
+    setState {
+      val didUpdate = downloadAtlas.setRandomAwaitingSubrangeDownloaded(cellLength)
+      downloadTimeoutId = when {
+        didUpdate -> window.setTimeout({ doDownloadStep() }, 100)
+        else -> null
+      }
+    }
+  }
+
+  private fun reset() {
+    setState {
+      downloadTimeoutId?.let {
+        window.clearTimeout(it)
+        downloadTimeoutId = null
+      }
+
+      downloadAtlas.clear()
     }
   }
 
   override fun RBuilder.render() {
-    h1 {
-      +"Two colored range visualizer"
-    }
-//    label {
-//      attrs {
-//        htmlFor = "range-length"
-//      }
-//      +"Range length (1..10000): "
-//    }
-//    styledInput {
-//      attrs {
-//        id = "range-length"
-//        type = InputType.text
-//        value = state.range.range.endInclusive.toString()
-//        disabled = state.didStart
-//      }
-//    }
-//    styledDiv {
-//      css { +Styles.clear }
-//    }
-//    label {
-//      attrs {
-//        htmlFor = "block-length"
-//      }
-//      +"Block length (5..20): "
-//    }
-//    styledInput {
-//      attrs {
-//        id = "length"
-//        type = InputType.text
-//        value = state.blockLength.toString()
-//        disabled = state.didStart
-//        onChange = {
-//          console.log((it.target as HTMLInputElement).value)
-//        }
-//      }
-//    }
-//    styledDiv {
-//      css { +Styles.clear }
-//    }
-    styledButton {
-      css { +Styles.button }
-      attrs {
-        onClick = {
-          setState {
-            didStart = true
-          }
-          startFillingRandomSubrange()
-        }
-        disabled = state.didStart
+    val canStart = state.downloadTimeoutId == null && state.downloadAtlas.hasWaitingSubranges()
+    div {
+      attrs { classes = setOf("container") }
+
+      h1 {
+        +"Two-colored range visualizer"
       }
-      +"Start filling"
-    }
-//    styledButton {
-//      css { +Styles.button }
-//      attrs {
-//        onClick = {
-//          startFillingRandomSubrange()
-//        }
-//      }
-//      +"Reset"
-//    }
-    child(Grid::class) {
-      attrs {
-        range = state.range
+      p {
+        +"This is an example of two-colored range application: tracking file status during partial download."
+      }
+      div {
+        attrs { classes = setOf("row") }
+
+        div {
+          attrs { classes = setOf("col-lg-6") }
+
+          div {
+            attrs { classes = setOf("card", "mb-3") }
+
+            div {
+              attrs { classes = setOf("card-body") }
+
+              form {
+                div {
+                  attrs { classes = setOf("mb-3") }
+
+                  label {
+                    attrs {
+                      htmlFor = "file-size"
+                      classes = setOf("form-label")
+                    }
+                    +"File size: ${state.downloadAtlas.length} bytes "
+                  }
+                  input {
+                    attrs {
+                      id = "file-size"
+                      type = InputType.range
+                      classes = setOf("form-range")
+                      min = validFileLength.first.toString()
+                      max = validFileLength.last.toString()
+                      value = state.downloadAtlas.length.toString()
+                      disabled = !canStart
+                      onChange = {
+                        setFileSize((it.target as HTMLInputElement).value.toInt())
+                      }
+                    }
+                  }
+                }
+                div {
+                  attrs { classes = setOf("mb-3") }
+
+                  label {
+                    attrs {
+                      htmlFor = "cell-length"
+                      classes = setOf("form-label")
+                    }
+                    +"Cell length: ${state.cellLength} bytes"
+                  }
+                  input {
+                    attrs {
+                      id = "cell-length"
+                      type = InputType.range
+                      classes = setOf("form-range")
+                      min = validCellLength.first.toString()
+                      max = validCellLength.last.toString()
+                      value = state.cellLength.toString()
+                      disabled = !canStart
+                      onChange = {
+                        setCellLength((it.target as HTMLInputElement).value.toInt())
+                      }
+                    }
+                  }
+                }
+                button {
+                  attrs {
+                    type = ButtonType.button
+                    classes = setOf("btn", "btn-primary")
+                    onClick = { startDownloading() }
+                    disabled = !canStart
+                  }
+                  +"Start download simulation"
+                }
+                button {
+                  attrs {
+                    type = ButtonType.button
+                    classes = setOf("btn", "btn-primary", "ms-2")
+                    onClick = { reset() }
+                  }
+                  +"Reset"
+                }
+              }
+            }
+          }
+        }
+      }
+
+      div {
+        attrs { classes = setOf("card", "mb-3") }
+
+        div {
+          attrs { classes = setOf("card-body") }
+
+          child(Grid::class) {
+            attrs {
+              downloadAtlas = state.downloadAtlas
+              cellLength = state.cellLength
+            }
+          }
+        }
+      }
+
+      p {
+        +"Links:"
+      }
+      ul {
+        li {
+          a {
+            attrs { href = "https://two-colored-range.thorny.me" }
+            +"Project page"
+          }
+        }
+        li {
+          a {
+            attrs { href = "https://github.com/thorny-thorny/two-colored-range-visualizer" }
+            +"Source code"
+          }
+        }
       }
     }
   }

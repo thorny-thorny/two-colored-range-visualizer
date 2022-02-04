@@ -1,12 +1,11 @@
 import kotlinx.css.flex
-import me.thorny.twoColoredRange.RedGreenIntArrayRange
 import react.*
 import styled.css
 import styled.styledDiv
 
 external interface CellProps: Props {
-  var range: RedGreenIntArrayRange
-  var segmentRange: ClosedRange<Int>?
+  var downloadAtlas: DownloadAtlas
+  var subrange: ClosedRange<Int>?
   var endPadLength: Int?
 }
 
@@ -17,22 +16,22 @@ class Cell(props: CellProps): RComponent<CellProps, State>(props) {
       css { +Styles.cellContainer }
       styledDiv {
         css { +Styles.cell }
-        if (props.segmentRange != null) {
-          props.range.subrangesIterator(props.segmentRange!!).asSequence().toList().map { (subrange, color) ->
+        props.subrange?.let { subrange ->
+          props.downloadAtlas.subrangesIterator(subrange).asSequence().toList().map { (subrange, state) ->
             styledDiv {
               css {
-                +when (color) {
-                  props.range.defaultColor -> Styles.cellSegmentEmpty
-                  else -> Styles.cellSegmentFull
+                +when (state) {
+                  DownloadState.WAITING -> Styles.cellSegmentWaiting
+                  DownloadState.DOWNLOADED -> Styles.cellSegmentDownloaded
                 }
                 flex((1 + subrange.endInclusive - subrange.start).toDouble())
               }
             }
           }
-          if (props.endPadLength != null) {
+          props.endPadLength?.let { endPadLength ->
             styledDiv {
               css {
-                flex(props.endPadLength!!.toDouble())
+                flex(endPadLength.toDouble())
               }
             }
           }

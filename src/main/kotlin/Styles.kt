@@ -2,14 +2,6 @@ import kotlinx.css.*
 import styled.StyleSheet
 
 object Styles : StyleSheet("Styles", isStatic = true) {
-  val clear by css {
-    clear = Clear.both
-  }
-
-  val button by css {
-    margin(5.px)
-  }
-
   val grid by css {
     display = Display.flex
     flexDirection = FlexDirection.column
@@ -37,11 +29,11 @@ object Styles : StyleSheet("Styles", isStatic = true) {
     display = Display.flex
   }
 
-  val cellSegmentEmpty by css {
+  val cellSegmentWaiting by css {
     backgroundColor = Color("#007931")
   }
 
-  val cellSegmentFull by css {
+  val cellSegmentDownloaded by css {
     backgroundColor = Color("#00DF5B")
   }
 } 
