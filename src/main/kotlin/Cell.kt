@@ -1,7 +1,7 @@
-import kotlinx.css.flex
+import emotion.react.css
 import react.*
-import styled.css
-import styled.styledDiv
+import react.dom.html.ReactHTML.div
+import web.cssom.*
 
 external interface CellProps: Props {
   var downloadAtlas: DownloadAtlas
@@ -9,30 +9,41 @@ external interface CellProps: Props {
   var endPadLength: Int?
 }
 
-@JsExport
-class Cell(props: CellProps): RComponent<CellProps, State>(props) {
-  override fun RBuilder.render() {
-    styledDiv {
-      css { +Styles.cellContainer }
-      styledDiv {
-        css { +Styles.cell }
-        props.subrange?.let { subrange ->
-          props.downloadAtlas.subrangesIterator(subrange).asSequence().toList().map { (subrange, state) ->
-            styledDiv {
-              css {
-                +when (state) {
-                  DownloadState.WAITING -> Styles.cellSegmentWaiting
-                  DownloadState.DOWNLOADED -> Styles.cellSegmentDownloaded
-                }
-                flex((1 + subrange.endInclusive - subrange.start).toDouble())
+val Cell = FC<CellProps> { props ->
+  div {
+    css {
+      flex = Auto.auto
+      height = Auto.auto
+      display = Display.flex
+
+      before {
+        content = Content("")
+        float = Float.left
+        paddingTop = 100.pct
+      }
+    }
+    div {
+      css {
+        width = 90.pct
+        height = 90.pct
+        display = Display.flex
+      }
+      props.subrange?.let { subrange ->
+        props.downloadAtlas.subrangesIterator(subrange).asSequence().toList().map { (subrange, state) ->
+          div {
+            css {
+              backgroundColor = when (state) {
+                DownloadState.Waiting -> Color("#007931")
+                DownloadState.Downloaded -> Color("#00DF5B")
               }
+              flex = Flex(grow = number((1 + subrange.endInclusive - subrange.start).toDouble()), basis = Auto.auto)
             }
           }
-          props.endPadLength?.let { endPadLength ->
-            styledDiv {
-              css {
-                flex(endPadLength.toDouble())
-              }
+        }
+        props.endPadLength?.let { endPadLength ->
+          div {
+            css {
+              flex = Flex(grow = number(endPadLength.toDouble()), basis = Auto.auto)
             }
           }
         }

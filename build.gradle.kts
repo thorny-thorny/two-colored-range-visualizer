@@ -1,5 +1,5 @@
 plugins {
-    kotlin("js") version "1.6.10"
+    kotlin("js") version "2.0.10"
 }
 
 group = "me.thorny"
@@ -11,19 +11,15 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin-wrappers:kotlin-react:17.0.2-pre.240-kotlin-1.5.30")
-    implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:17.0.2-pre.240-kotlin-1.5.30")
-    implementation("org.jetbrains.kotlin-wrappers:kotlin-styled:5.3.1-pre.240-kotlin-1.5.30")
-    implementation("me.thorny:two-colored-range:0.9.2")
+    implementation("org.jetbrains.kotlin-wrappers:kotlin-react:18.3.1-pre.793")
+    implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom:18.3.1-pre.793")
+    implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion:11.13.0-pre.793")
+    implementation("me.thorny:two-colored-range:1.0.0")
 }
 
 kotlin {
-    js(LEGACY) {
+    js {
         binaries.executable()
-        browser {
-            commonWebpackConfig {
-                cssSupport.enabled = true
-            }
-        }
+        browser()
     }
 }

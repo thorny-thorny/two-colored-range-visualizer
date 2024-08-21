@@ -1,12 +1,6 @@
-import react.dom.render
-import kotlinx.browser.document
-import kotlinx.browser.window
+import react.create
+import react.dom.client.createRoot
 
 fun main() {
-  window.onload = {
-    render(document.getElementById("root")) {
-      child(Page::class) {
-      }
-    }
-  }
+  createRoot(web.dom.document.getElementById("root")!!).render(Page.create())
 }

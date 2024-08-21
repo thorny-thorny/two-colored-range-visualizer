@@ -1,11 +1,20 @@
 import react.*
-import kotlinx.browser.window
-import kotlinx.html.ButtonType
-import kotlinx.html.InputType
-import kotlinx.html.classes
-import kotlinx.html.id
-import org.w3c.dom.HTMLInputElement
-import react.dom.*
+import react.dom.html.ReactHTML.a
+import react.dom.html.ReactHTML.button
+import react.dom.html.ReactHTML.div
+import react.dom.html.ReactHTML.form
+import react.dom.html.ReactHTML.h1
+import react.dom.html.ReactHTML.input
+import react.dom.html.ReactHTML.label
+import react.dom.html.ReactHTML.li
+import react.dom.html.ReactHTML.p
+import react.dom.html.ReactHTML.ul
+import web.cssom.ClassName
+import web.html.ButtonType
+import web.html.InputType
+import web.timers.Timeout
+import web.timers.clearTimeout
+import web.timers.setTimeout
 
 val validFileLength = 1..10000
 val validCellLength = 5..20
@@ -13,183 +22,169 @@ val validCellLength = 5..20
 data class PageState(
   var downloadAtlas: DownloadAtlas,
   var cellLength: Int,
-  var downloadTimeoutId: Int?,
-): State
+  var downloadTimeoutId: Timeout?,
+)
 
-@JsExport
-class Page: RComponent<Props, PageState>() {
-  init {
-    state = PageState(
+val Page = FC {
+  val (state, setState) = useState {
+    PageState(
       DownloadAtlas(validFileLength.last),
       validCellLength.last,
       null,
     )
   }
 
-  private fun setFileSize(size: Int) {
+  val setFileSize = useCallback(*emptyArray()) { size: Int ->
     setState {
-      downloadAtlas = DownloadAtlas(size)
+      it.copy(downloadAtlas = DownloadAtlas(size))
     }
   }
 
-  private fun setCellLength(length: Int) {
+  val setCellLength = useCallback(*emptyArray()) { length: Int ->
     setState {
-      cellLength = length
+      it.copy(cellLength = length)
     }
   }
 
-  private fun startDownloading() {
+  fun doDownloadStep() {
+    setState {
+      val didUpdate = it.downloadAtlas.setRandomAwaitingSubrangeDownloaded(it.cellLength)
+      it.copy(
+        downloadTimeoutId = when {
+          didUpdate -> setTimeout({ doDownloadStep() }, 100)
+          else -> null
+        }
+      )
+    }
+  }
+
+  val startDownloading = useCallback(*emptyArray()) {
     doDownloadStep()
   }
 
-  private fun doDownloadStep() {
+  val reset = useCallback(*emptyArray()) {
     setState {
-      val didUpdate = downloadAtlas.setRandomAwaitingSubrangeDownloaded(cellLength)
-      downloadTimeoutId = when {
-        didUpdate -> window.setTimeout({ doDownloadStep() }, 100)
-        else -> null
+      it.downloadTimeoutId?.let { id ->
+        clearTimeout(id)
       }
+
+      it.downloadAtlas.clear()
+      it.copy(downloadTimeoutId = null)
     }
   }
 
-  private fun reset() {
-    setState {
-      downloadTimeoutId?.let {
-        window.clearTimeout(it)
-        downloadTimeoutId = null
-      }
+  val canStart = state.downloadTimeoutId == null && state.downloadAtlas.hasWaitingSubranges()
 
-      downloadAtlas.clear()
+  div {
+    className = ClassName("container")
+
+    h1 {
+      +"Two-colored range visualizer"
     }
-  }
-
-  override fun RBuilder.render() {
-    val canStart = state.downloadTimeoutId == null && state.downloadAtlas.hasWaitingSubranges()
+    p {
+      +"This is an example of two-colored range application: tracking file status during partial download."
+    }
     div {
-      attrs { classes = setOf("container") }
+      className = ClassName("row")
 
-      h1 {
-        +"Two-colored range visualizer"
-      }
-      p {
-        +"This is an example of two-colored range application: tracking file status during partial download."
-      }
       div {
-        attrs { classes = setOf("row") }
+        className = ClassName("col-lg-6")
 
         div {
-          attrs { classes = setOf("col-lg-6") }
+          className = ClassName("card mb-3")
 
           div {
-            attrs { classes = setOf("card", "mb-3") }
+            className = ClassName("card-body")
 
-            div {
-              attrs { classes = setOf("card-body") }
+            form {
+              div {
+                className = ClassName("mb-3")
 
-              form {
-                div {
-                  attrs { classes = setOf("mb-3") }
-
-                  label {
-                    attrs {
-                      htmlFor = "file-size"
-                      classes = setOf("form-label")
-                    }
-                    +"File size: ${state.downloadAtlas.length} bytes "
-                  }
-                  input {
-                    attrs {
-                      id = "file-size"
-                      type = InputType.range
-                      classes = setOf("form-range")
-                      min = validFileLength.first.toString()
-                      max = validFileLength.last.toString()
-                      value = state.downloadAtlas.length.toString()
-                      disabled = !canStart
-                      onChange = {
-                        setFileSize((it.target as HTMLInputElement).value.toInt())
-                      }
-                    }
+                label {
+                  htmlFor = "file-size"
+                  className = ClassName("form-label")
+                  +"File size: ${state.downloadAtlas.length} bytes "
+                }
+                input {
+                  id = "file-size"
+                  type = InputType.range
+                  className = ClassName("form-range")
+                  min = validFileLength.first.toString()
+                  max = validFileLength.last.toString()
+                  value = state.downloadAtlas.length.toString()
+                  disabled = !canStart
+                  onChange = {
+                    setFileSize(it.target.value.toInt())
                   }
                 }
-                div {
-                  attrs { classes = setOf("mb-3") }
+              }
+              div {
+                className = ClassName("mb-3")
 
-                  label {
-                    attrs {
-                      htmlFor = "cell-length"
-                      classes = setOf("form-label")
-                    }
-                    +"Cell length: ${state.cellLength} bytes"
-                  }
-                  input {
-                    attrs {
-                      id = "cell-length"
-                      type = InputType.range
-                      classes = setOf("form-range")
-                      min = validCellLength.first.toString()
-                      max = validCellLength.last.toString()
-                      value = state.cellLength.toString()
-                      disabled = !canStart
-                      onChange = {
-                        setCellLength((it.target as HTMLInputElement).value.toInt())
-                      }
-                    }
+                label {
+                  htmlFor = "cell-length"
+                  className = ClassName("form-label")
+                  +"Cell length: ${state.cellLength} bytes"
+                }
+                input {
+                  id = "cell-length"
+                  type = InputType.range
+                  className = ClassName("form-range")
+                  min = validCellLength.first.toString()
+                  max = validCellLength.last.toString()
+                  value = state.cellLength.toString()
+                  disabled = !canStart
+                  onChange = {
+                    setCellLength(it.target.value.toInt())
                   }
                 }
-                button {
-                  attrs {
-                    type = ButtonType.button
-                    classes = setOf("btn", "btn-primary")
-                    onClick = { startDownloading() }
-                    disabled = !canStart
-                  }
-                  +"Start download simulation"
-                }
-                button {
-                  attrs {
-                    type = ButtonType.button
-                    classes = setOf("btn", "btn-primary", "ms-2")
-                    onClick = { reset() }
-                  }
-                  +"Reset"
-                }
+              }
+              button {
+                type = ButtonType.button
+                className = ClassName("btn btn-primary")
+                onClick = { startDownloading() }
+                disabled = !canStart
+                +"Start download simulation"
+              }
+              button {
+                type = ButtonType.button
+                className = ClassName("btn btn-primary ms-2")
+                onClick = { reset() }
+                +"Reset"
               }
             }
           }
         }
       }
+    }
+
+    div {
+      className = ClassName("card mb-3")
 
       div {
-        attrs { classes = setOf("card", "mb-3") }
+        className = ClassName("card-body")
 
-        div {
-          attrs { classes = setOf("card-body") }
-
-          child(Grid::class) {
-            attrs {
-              downloadAtlas = state.downloadAtlas
-              cellLength = state.cellLength
-            }
-          }
+        Grid {
+          downloadAtlas = state.downloadAtlas
+          cellLength = state.cellLength
         }
       }
+    }
 
-      p {
-        +"Links:"
-      }
-      ul {
-        li {
-          a {
-            attrs { href = "https://two-colored-range.thorny.me" }
-            +"Project page"
-          }
+    p {
+      +"Links:"
+    }
+    ul {
+      li {
+        a {
+          href = "https://two-colored-range.thorny.me"
+          +"Project page"
         }
-        li {
-          a {
-            attrs { href = "https://github.com/thorny-thorny/two-colored-range-visualizer" }
-            +"Source code"
-          }
+      }
+      li {
+        a {
+          href = "https://github.com/thorny-thorny/two-colored-range-visualizer"
+          +"Source code"
         }
       }
     }
